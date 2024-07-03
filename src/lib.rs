@@ -1,8 +1,8 @@
 mod utils;
 use std::f64;
-use wasm_bindgen::Clamped;
 use wasm_bindgen::prelude::*;
-use web_sys::{ImageData, CanvasRenderingContext2d};
+use wasm_bindgen::Clamped;
+use web_sys::{CanvasRenderingContext2d, ImageData};
 
 #[wasm_bindgen(start)]
 fn start() {
@@ -38,16 +38,21 @@ pub fn read_tga(ctx: &CanvasRenderingContext2d, buffer: &[u8]) {
     let width = img.width();
     let height = img.height();
 
-    let image_data = ImageData::new_with_u8_clamped_array_and_sh(
-        Clamped(&mut img.to_rgba8()),
-        width,
-        height,
-    )
-    .unwrap();
+    let image_data =
+        ImageData::new_with_u8_clamped_array_and_sh(Clamped(&mut img.to_rgba8()), width, height)
+            .unwrap();
 
     let canvas = ctx.canvas().unwrap();
     canvas.set_width(width);
     canvas.set_height(height);
 
     ctx.put_image_data(&image_data, 0.0, 0.0).unwrap();
+}
+
+#[wasm_bindgen]
+pub fn rgba_to_rgb(ctx: &CanvasRenderingContext2d, sw: f64, sh: f64) {
+    let data = ctx.get_image_data(0.0, 0.0, sw, sh).unwrap();
+    let raw_pixels = data.data().to_vec();
+    let img_buffer = image::ImageBuffer::from_vec(sw as u32, sh as u32, raw_pixels).unwrap();
+    let image = image::DynamicImage::ImageRgb8(img_buffer);
 }
