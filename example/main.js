@@ -1,4 +1,4 @@
-import init, { start, read_tga, split_layer } from "../pkg/tgaviewer.js"
+import init, { start, read_tga, read_rgb } from "../pkg/tgaviewer.js"
 
 async function main() {
   await init();
@@ -16,8 +16,12 @@ async function main() {
   const ctx = canvas.getContext('2d');
   read_tga(ctx, u8);
   console.timeEnd('tga decode');
-  console.log('分辨率', canvas.width, canvas.height)
-  const rgb = split_layer(ctx);
+  console.log('分辨率', canvas.width, canvas.height, canvas.width * canvas.height * 3)
+
+  console.time('read_rgb');
+  const rgb = read_rgb(ctx, u8);
+  console.timeEnd('read_rgb');
+
   console.log(rgb);
 }
 

@@ -1,10 +1,11 @@
 mod utils;
-use std::f64;
+use image::imageops::FilterType;
 use image::Rgba;
+use imageproc::region_labelling::{connected_components, Connectivity};
+use std::f64;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::Clamped;
 use web_sys::{CanvasRenderingContext2d, ImageData};
-use imageproc::region_labelling::{Connectivity, connected_components};
 
 #[wasm_bindgen(start)]
 fn start() {
@@ -52,20 +53,18 @@ pub fn read_tga(ctx: &CanvasRenderingContext2d, buffer: &[u8]) {
 }
 
 #[wasm_bindgen]
-pub fn split_layer(ctx: &CanvasRenderingContext2d)-> Vec<u32>{
-    let canvas = ctx.canvas().unwrap();
-    let width = canvas.width();
-    let height = canvas.height();
-    let data = ctx
-        .get_image_data(0.0, 0.0, width as f64, height as f64)
-        .unwrap();
-    let raw_pixels = data.data().to_vec();
-    let img_buffer: image::ImageBuffer<image::Rgb<u8>, Vec<u8>> = image::ImageBuffer::from_vec(width, height, raw_pixels).unwrap();
-    let image = image::DynamicImage::ImageRgb8(img_buffer);
-    // let image = image.grayscale();
+pub fn read_rgb(ctx: &CanvasRenderingContext2d, buffer: &[u8]) -> Vec<u8> {
+    let src = image::load_from_memory_with_format(buffer, image::ImageFormat::Tga).expect("err");
+    // let background_color = Rgba([255,255,255,255]);
+    // let labels = connected_components(&image, Connectivity::Four, background_color);
+    let w = src.width() / 5;
+    let h = src.height() / 5;
+    let src = src.resize(w, h, FilterType::CatmullRom);
 
-    let background_color = Rgba([255,255,255,255]);
-    let labels = connected_components(&image, Connectivity::Four, background_color);
+    let image_data =
+        ImageData::new_with_u8_clamped_array_and_sh(Clamped(&mut src.to_rgba8()), w, h).unwrap();
 
-    return labels.to_vec();
+    ctx.put_image_data(&image_data, 0.0, 0.0).unwrap();
+
+    return src.to_rgb8().to_vec();
 }
