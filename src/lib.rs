@@ -1,8 +1,10 @@
 mod utils;
 use std::f64;
+use image::Rgba;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::Clamped;
 use web_sys::{CanvasRenderingContext2d, ImageData};
+use imageproc::region_labelling::{Connectivity, connected_components};
 
 #[wasm_bindgen(start)]
 fn start() {
@@ -50,9 +52,20 @@ pub fn read_tga(ctx: &CanvasRenderingContext2d, buffer: &[u8]) {
 }
 
 #[wasm_bindgen]
-pub fn rgba_to_rgb(ctx: &CanvasRenderingContext2d, sw: f64, sh: f64) {
-    let data = ctx.get_image_data(0.0, 0.0, sw, sh).unwrap();
+pub fn split_layer(ctx: &CanvasRenderingContext2d)-> Vec<u32>{
+    let canvas = ctx.canvas().unwrap();
+    let width = canvas.width();
+    let height = canvas.height();
+    let data = ctx
+        .get_image_data(0.0, 0.0, width as f64, height as f64)
+        .unwrap();
     let raw_pixels = data.data().to_vec();
-    let img_buffer = image::ImageBuffer::from_vec(sw as u32, sh as u32, raw_pixels).unwrap();
+    let img_buffer: image::ImageBuffer<image::Rgb<u8>, Vec<u8>> = image::ImageBuffer::from_vec(width, height, raw_pixels).unwrap();
     let image = image::DynamicImage::ImageRgb8(img_buffer);
+    // let image = image.grayscale();
+
+    let background_color = Rgba([255,255,255,255]);
+    let labels = connected_components(&image, Connectivity::Four, background_color);
+
+    return labels.to_vec();
 }
