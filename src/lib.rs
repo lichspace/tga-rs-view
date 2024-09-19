@@ -1,4 +1,4 @@
-mod cv;
+pub mod cv;
 mod utils;
 use image::imageops::FilterType;
 use image::DynamicImage;
