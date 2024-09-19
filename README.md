@@ -1,3 +1,6 @@
+## start 
+wasm-pack.exe build --target web
+
 <div align="center">
 
   <h1><code>wasm-pack-template</code></h1>

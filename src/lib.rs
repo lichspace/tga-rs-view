@@ -1,11 +1,79 @@
+mod cv;
 mod utils;
 use image::imageops::FilterType;
+use image::DynamicImage;
+use image::ImageBuffer;
 use image::Rgba;
-use imageproc::region_labelling::{connected_components, Connectivity};
 use std::f64;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::Clamped;
 use web_sys::{CanvasRenderingContext2d, ImageData};
+
+#[wasm_bindgen]
+pub struct Rimage {
+    id: i32,
+    dimage: ImageBuffer<Rgba<u8>, Vec<u8>>,
+    width: u32,
+    height: u32,
+}
+
+#[wasm_bindgen]
+impl Rimage {
+    #[wasm_bindgen(constructor)]
+    pub fn new(id: i32) -> Rimage {
+        let dimage = DynamicImage::new_rgba8(1, 1).to_rgba8();
+        Rimage {
+            id,
+            dimage,
+            width: 0,
+            height: 0,
+        }
+    }
+
+    #[wasm_bindgen]
+    pub fn process_data(&mut self) {
+        self.id += 1;
+    }
+
+    #[wasm_bindgen]
+    pub fn get_id(&self) -> i32 {
+        self.id
+    }
+
+    #[wasm_bindgen]
+    pub fn open_tga(&mut self, buffer: &[u8]) {
+        let img =
+            image::load_from_memory_with_format(buffer, image::ImageFormat::Tga).expect("err");
+        self.dimage = img.to_rgba8();
+        self.width = img.width();
+        self.height = img.height();
+    }
+
+    #[wasm_bindgen]
+    pub fn get_data(&mut self) -> Vec<u8> {
+        return self.dimage.to_vec();
+    }
+
+    #[wasm_bindgen]
+    pub fn get_size(&mut self) -> Vec<u32> {
+        let dimensions = self.dimage.dimensions();
+        let res = vec![dimensions.0, dimensions.1];
+        return res;
+    }
+
+    #[wasm_bindgen]
+    pub fn flood_fill(&mut self, x: u32, y: u32, color: Vec<u8>) -> Vec<u8> {
+        println!("{:?}", color);
+        let res = cv::flood_fill(
+            &self.dimage,
+            x,
+            y,
+            Rgba::<u8>([color[0], color[1], color[2], color[3]]),
+        );
+        let res = res.to_vec();
+        return res;
+    }
+}
 
 #[wasm_bindgen(start)]
 fn start() {
