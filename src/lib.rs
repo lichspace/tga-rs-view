@@ -1,6 +1,8 @@
 pub mod cv;
 mod utils;
+use image::imageops;
 use image::imageops::FilterType;
+use image::math::Rect;
 use image::DynamicImage;
 use image::ImageBuffer;
 use image::Rgba;
@@ -15,6 +17,7 @@ pub struct Rimage {
     dimage: ImageBuffer<Rgba<u8>, Vec<u8>>,
     width: u32,
     height: u32,
+    flood_fill_rect: Rect,
 }
 
 #[wasm_bindgen]
@@ -27,6 +30,12 @@ impl Rimage {
             dimage,
             width: 0,
             height: 0,
+            flood_fill_rect: Rect {
+                x: 0,
+                y: 0,
+                width: 0,
+                height: 0,
+            },
         }
     }
 
@@ -49,29 +58,37 @@ impl Rimage {
         self.height = img.height();
     }
 
-    #[wasm_bindgen]
-    pub fn get_data(&mut self) -> Vec<u8> {
+    #[wasm_bindgen(getter)]
+    pub fn data(&mut self) -> Vec<u8> {
         return self.dimage.to_vec();
     }
 
-    #[wasm_bindgen]
-    pub fn get_size(&mut self) -> Vec<u32> {
+    #[wasm_bindgen(getter)]
+    pub fn size(&mut self) -> Vec<u32> {
         let dimensions = self.dimage.dimensions();
         let res = vec![dimensions.0, dimensions.1];
         return res;
     }
 
+    #[wasm_bindgen(getter)]
+    pub fn flood_fill_rect(&mut self) -> Vec<u32> {
+        let rect = &self.flood_fill_rect;
+        return [rect.x, rect.y, rect.width, rect.height].to_vec();
+    }
+
     #[wasm_bindgen]
     pub fn flood_fill(&mut self, x: u32, y: u32, color: Vec<u8>) -> Vec<u8> {
         println!("{:?}", color);
-        let res = cv::flood_fill(
+        let (mut mask, rect) = cv::flood_fill(
             &self.dimage,
             x,
             y,
             Rgba::<u8>([color[0], color[1], color[2], color[3]]),
         );
-        let res = res.to_vec();
-        return res;
+
+        self.flood_fill_rect = rect;
+        let roi = imageops::crop(&mut mask, rect.x, rect.y, rect.width, rect.height).to_image();
+        return roi.to_vec();
     }
 }
 

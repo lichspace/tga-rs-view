@@ -1,14 +1,17 @@
-use image::{imageops::grayscale, ImageBuffer, Luma, Rgba};
+use image::{math::Rect, ImageBuffer, Luma, Rgba};
+
+use crate::utils::BoundingRect;
 
 pub fn flood_fill(
     image: &ImageBuffer<Rgba<u8>, Vec<u8>>,
     seed_x: u32,
     seed_y: u32,
     fill_color: Rgba<u8>,
-) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
+) -> (ImageBuffer<Rgba<u8>, Vec<u8>>, Rect) {
     let mut visited = ImageBuffer::from_pixel(image.width(), image.height(), Luma([0]));
     let mut result = ImageBuffer::from_pixel(image.width(), image.height(), Rgba([0, 0, 0, 0]));
     let mut stack = vec![(seed_x, seed_y)];
+    let mut bbox = BoundingRect::new();
 
     let width = image.width();
     let height = image.height();
@@ -21,6 +24,7 @@ pub fn flood_fill(
 
         visited.put_pixel(x, y, Luma([1]));
         result.put_pixel(x, y, fill_color);
+        bbox.update(x, y);
 
         // 检查相邻的像素
         for &(dx, dy) in &[(1, 0), (-1, 0), (0, 1), (0, -1)] {
@@ -38,5 +42,13 @@ pub fn flood_fill(
         }
     }
 
-    result
+    let (x, y, width, height) = bbox.get_rect().unwrap();
+    let rect = Rect {
+        x,
+        y,
+        width,
+        height,
+    };
+    
+    return (result, rect);
 }

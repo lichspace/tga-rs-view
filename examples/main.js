@@ -1,4 +1,4 @@
-import init, { start, read_tga, read_rgb, Rimage } from "../pkg/tgaviewer.js"
+import init, { Rimage } from "../pkg/tgaviewer.js"
 
 async function main() {
   await init();
@@ -10,9 +10,9 @@ async function main() {
 
   const cl = new Rimage(0);
   cl.open_tga(u8);
-  const [width, height] = cl.get_size();
+  const [width, height] = cl.size;
 
-  const data = cl.get_data();
+  const data = cl.data;
 
   console.log(width, height, data);
 
@@ -22,27 +22,20 @@ async function main() {
   const ctx = canvas.getContext('2d');
   ctx.putImageData(new ImageData(new Uint8ClampedArray(data), width, height), 0, 0);
 
-  canvas.addEventListener('click', e => {
-    console.log(e);
+  canvas.addEventListener('pointerdown', e => {
     const { offsetX, offsetY } = e;
     console.time('flood_fill');
     const data = cl.flood_fill(offsetX, offsetY, new Uint8Array([255, 0, 0, 255]));
+    const rect = cl.flood_fill_rect;
     console.timeEnd('flood_fill');
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
     const ctx2 = canvas.getContext('2d');
-    ctx2.putImageData(new ImageData(new Uint8ClampedArray(data), width, height), 0, 0);
+    console.log(data, rect);
+    ctx2.putImageData(new ImageData(new Uint8ClampedArray(data), rect[2], rect[3]), rect[0], rect[1]);
     ctx.drawImage(canvas, 0, 0);
-    // document.body.append(canvas);
   });
-
-
-  // console.time('read_rgb');
-  // const rgb = read_rgb(ctx, u8);
-  // console.timeEnd('read_rgb');
-
-  // console.log(rgb);
 }
 
 main()
