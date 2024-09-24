@@ -42,8 +42,7 @@ impl Rimage {
 
     #[wasm_bindgen]
     pub fn open_tga(&mut self, buffer: &[u8]) {
-        let img =
-            image::load_from_memory_with_format(buffer, image::ImageFormat::Tga).expect("err");
+        let img = image::load_from_memory(buffer).expect("err");
         self.dimage = img.to_rgba8();
         self.width = img.width();
         self.height = img.height();
