@@ -12,7 +12,9 @@ async function main() {
   cl.open_tga(u8);
   const [width, height] = cl.size;
 
+  console.time('getdata');
   const data = cl.data;
+  console.timeEnd('getdata');
 
   console.log(width, height, data);
 
@@ -25,9 +27,9 @@ async function main() {
   canvas.addEventListener('pointerdown', e => {
     const { offsetX, offsetY } = e;
     console.time('flood_fill');
-    const data = cl.flood_fill(offsetX, offsetY, new Uint8Array([255, 0, 0, 255]));
-    const rect = cl.flood_fill_rect;
+    const data = cl.flood_fill(offsetX, offsetY, new Uint8Array([128, 0, 0, 255]));
     console.timeEnd('flood_fill');
+    const rect = cl.flood_fill_rect;
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
