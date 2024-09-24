@@ -45,17 +45,17 @@ impl Rimage {
     }
 
     #[wasm_bindgen]
-    pub fn get_id(&self) -> i32 {
-        self.id
-    }
-
-    #[wasm_bindgen]
     pub fn open_tga(&mut self, buffer: &[u8]) {
         let img =
             image::load_from_memory_with_format(buffer, image::ImageFormat::Tga).expect("err");
         self.dimage = img.to_rgba8();
         self.width = img.width();
         self.height = img.height();
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn id(&self) -> i32 {
+        self.id
     }
 
     #[wasm_bindgen(getter)]
